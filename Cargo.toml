@@ -1,0 +1,9 @@
+[package]
+name = "serde-test"
+version = "0.1.0"
+authors = ["amfl <amfl@none.none>"]
+
+[dependencies]
+
+serde = "1.0.15"
+pancurses = "*"
