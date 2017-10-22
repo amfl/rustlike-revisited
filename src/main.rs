@@ -30,7 +30,7 @@ fn main() {
 
         match input {
             Some(pancurses::Input::Character('q')) => { running = false; },
-            Some(x) => {rlr::input_handlers::handle_keys(x)},
+            Some(x) => {rlr::input_handlers::handle_keys(x); },
             None => {},
         }
     }
