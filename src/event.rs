@@ -5,6 +5,7 @@ pub enum Direction {
     Right
 }
 
-pub struct Event {
-    d: Direction
+pub enum Event {
+    Movement(Direction),
+    Quit,
 }
