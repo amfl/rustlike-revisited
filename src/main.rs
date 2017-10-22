@@ -1,3 +1,4 @@
+extern crate rlr;
 extern crate pancurses;
 
 fn main() {
@@ -20,7 +21,7 @@ fn main() {
 
         match input {
             Some(pancurses::Input::Character('q')) => { running = false; },
-            Some(_) => {},
+            Some(x) => {rlr::input_handlers::handle_keys(x)},
             None => {},
         }
     }
