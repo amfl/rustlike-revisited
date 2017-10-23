@@ -4,5 +4,6 @@
 extern crate log;
 
 // Define the modules this library exports.
-pub mod input_handlers;
+pub mod entity;
 pub mod event;
+pub mod input_handlers;

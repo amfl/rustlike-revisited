@@ -5,6 +5,7 @@ extern crate log;
 extern crate env_logger;
 
 use rlr::event::{Event, Direction};
+use rlr::entity::Entity;
 
 fn main() {
     // Initialize the logger in the main executable.
@@ -20,17 +21,20 @@ fn main() {
     let screen_width = 30;
     let screen_height = 15;
 
-    let mut player_x = screen_width / 2;
-    let mut player_y = screen_height / 2;
+    let mut player = Entity{
+        x: screen_width / 2,
+        y: screen_height / 2,
+        glyph: '@'
+    };
 
     while running {
-        win.mvprintw(player_y, player_x, "@");
+        win.mvprintw(player.y, player.x, "@");
         win.refresh();
         pancurses::noecho();
         pancurses::curs_set(0);
 
         let input = win.getch();
-        win.mvprintw(player_y, player_x, " ");
+        win.mvprintw(player.y, player.x, " ");
 
         match input {
             Some(x) => {
@@ -39,10 +43,10 @@ fn main() {
                         Event::Quit => { running = false; },
                         Event::Movement(direction) => {
                             match direction {
-                                Direction::Left => {player_x = player_x - 1; }
-                                Direction::Right => {player_x = player_x + 1; }
-                                Direction::Up => {player_y = player_y - 1; }
-                                Direction::Down => {player_y = player_y + 1; }
+                                Direction::Left => { player.mov(-1, 0); }
+                                Direction::Right => { player.mov(1, 0); }
+                                Direction::Up => { player.mov(0, -1); }
+                                Direction::Down => { player.mov(0, 1); }
                             };
                         },
                     },
