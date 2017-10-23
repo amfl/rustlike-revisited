@@ -6,6 +6,7 @@ extern crate env_logger;
 
 use rlr::event::{Event, Direction};
 use rlr::entity::Entity;
+use rlr::render_functions;
 
 fn main() {
     // Initialize the logger in the main executable.
@@ -28,13 +29,13 @@ fn main() {
     };
 
     while running {
-        win.mvprintw(player.y, player.x, "@");
+        rlr::render_functions::draw_entity(&win, &player);
         win.refresh();
         pancurses::noecho();
         pancurses::curs_set(0);
 
         let input = win.getch();
-        win.mvprintw(player.y, player.x, " ");
+        rlr::render_functions::clear_entity(&win, &player);
 
         match input {
             Some(x) => {
