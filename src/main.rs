@@ -20,18 +20,7 @@ fn main() {
     let mut running = true;
 
     let mut map = Map::new(16, 16);
-    {
-        for row in map.data.iter_mut() {
-            for tile in row.iter_mut() {
-                tile.transparent = true;
-                tile.walkable = true;
-            }
-        }
-    }
-    for x in 6..9 {
-        map.data[8][x].walkable = false;
-        map.data[8][x].transparent = false;
-    }
+    rlr::map_utils::make_map(&mut map);
 
     let player = Entity{
         x: 8,

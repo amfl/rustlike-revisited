@@ -9,3 +9,4 @@ pub mod event;
 pub mod input_handlers;
 pub mod render_functions;
 pub mod map;
+pub mod map_utils;
