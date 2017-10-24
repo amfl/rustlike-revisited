@@ -6,6 +6,6 @@ pub enum Direction {
 }
 
 pub enum Event {
-    Movement(Direction),
+    Movement((i32, i32)),
     Quit,
 }

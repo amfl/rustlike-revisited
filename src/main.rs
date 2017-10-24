@@ -4,7 +4,7 @@ extern crate pancurses;
 extern crate log;
 extern crate env_logger;
 
-use rlr::event::{Event, Direction};
+use rlr::event::Event;
 use rlr::entity::Entity;
 
 fn main() {
@@ -21,12 +21,12 @@ fn main() {
     let screen_width: u32 = 30;
     let screen_height: u32 = 15;
 
-    let mut player = Entity{
+    let player = Entity{
         x: (screen_width / 2) as i32,
         y: (screen_height / 2) as i32,
         glyph: '@'
     };
-    let mut npc = Entity{
+    let npc = Entity{
         x: 3,
         y: 3,
         glyph: '$'
@@ -47,13 +47,8 @@ fn main() {
                 match rlr::input_handlers::handle_keys(x) {
                     Some(event) => match event {
                         Event::Quit => { running = false; },
-                        Event::Movement(direction) => {
-                            match direction {
-                                Direction::Left => { entities[0].mov(-1, 0); }
-                                Direction::Right => { entities[0].mov(1, 0); }
-                                Direction::Up => { entities[0].mov(0, -1); }
-                                Direction::Down => { entities[0].mov(0, 1); }
-                            };
+                        Event::Movement((dx, dy)) => {
+                            entities[0].mov(dx, dy)
                         },
                     },
                     None => {}
