@@ -8,3 +8,4 @@ pub mod entity;
 pub mod event;
 pub mod input_handlers;
 pub mod render_functions;
+pub mod map;
