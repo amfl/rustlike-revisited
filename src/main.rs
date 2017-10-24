@@ -60,7 +60,11 @@ fn main() {
                     Some(event) => match event {
                         Event::Quit => { running = false; },
                         Event::Movement((dx, dy)) => {
-                            entities[0].mov(dx, dy)
+                            let player = &mut entities[0];
+                            let pos = (player.x + dx, player.y + dy);
+                            if map.data[pos.1 as usize][pos.0 as usize].walkable {
+                                player.mov(dx, dy);
+                            }
                         },
                     },
                     None => {}
