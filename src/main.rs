@@ -6,7 +6,6 @@ extern crate env_logger;
 
 use rlr::event::{Event, Direction};
 use rlr::entity::Entity;
-use rlr::render_functions;
 
 fn main() {
     // Initialize the logger in the main executable.
@@ -19,23 +18,29 @@ fn main() {
 
     let mut running = true;
 
-    let screen_width = 30;
-    let screen_height = 15;
+    let screen_width: u32 = 30;
+    let screen_height: u32 = 15;
 
     let mut player = Entity{
-        x: screen_width / 2,
-        y: screen_height / 2,
+        x: (screen_width / 2) as i32,
+        y: (screen_height / 2) as i32,
         glyph: '@'
     };
+    let mut npc = Entity{
+        x: 3,
+        y: 3,
+        glyph: '$'
+    };
+    let mut entities = vec![player, npc];
 
     while running {
-        rlr::render_functions::draw_entity(&win, &player);
+        rlr::render_functions::render_all(&win, &entities, screen_width, screen_height);
         win.refresh();
         pancurses::noecho();
         pancurses::curs_set(0);
 
         let input = win.getch();
-        rlr::render_functions::clear_entity(&win, &player);
+        rlr::render_functions::clear_entity(&win, &entities[0]);
 
         match input {
             Some(x) => {
@@ -44,10 +49,10 @@ fn main() {
                         Event::Quit => { running = false; },
                         Event::Movement(direction) => {
                             match direction {
-                                Direction::Left => { player.mov(-1, 0); }
-                                Direction::Right => { player.mov(1, 0); }
-                                Direction::Up => { player.mov(0, -1); }
-                                Direction::Down => { player.mov(0, 1); }
+                                Direction::Left => { entities[0].mov(-1, 0); }
+                                Direction::Right => { entities[0].mov(1, 0); }
+                                Direction::Up => { entities[0].mov(0, -1); }
+                                Direction::Down => { entities[0].mov(0, 1); }
                             };
                         },
                     },
