@@ -6,6 +6,7 @@ extern crate env_logger;
 
 use rlr::event::Event;
 use rlr::entity::Entity;
+use rlr::map::Map;
 
 fn main() {
     // Initialize the logger in the main executable.
@@ -18,12 +19,23 @@ fn main() {
 
     let mut running = true;
 
-    let screen_width: u32 = 30;
-    let screen_height: u32 = 15;
+    let mut map = Map::new(16, 16);
+    {
+        for row in map.data.iter_mut() {
+            for tile in row.iter_mut() {
+                tile.transparent = true;
+                tile.walkable = true;
+            }
+        }
+    }
+    for x in 6..9 {
+        map.data[8][x].walkable = false;
+        map.data[8][x].transparent = false;
+    }
 
     let player = Entity{
-        x: (screen_width / 2) as i32,
-        y: (screen_height / 2) as i32,
+        x: 8,
+        y: 4,
         glyph: '@'
     };
     let npc = Entity{
@@ -34,7 +46,7 @@ fn main() {
     let mut entities = vec![player, npc];
 
     while running {
-        rlr::render_functions::render_all(&win, &entities, screen_width, screen_height);
+        rlr::render_functions::render_all(&win, &map, &entities);
         win.refresh();
         pancurses::noecho();
         pancurses::curs_set(0);

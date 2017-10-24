@@ -1,5 +1,5 @@
 extern crate pancurses;
-use event::{Event, Direction};
+use event::{Event};
 
 pub fn handle_keys(user_input: pancurses::Input) -> Option<Event> {
     info!("Pushed key: {:?}", user_input);
