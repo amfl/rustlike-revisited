@@ -19,7 +19,7 @@ fn main() {
 
     let mut running = true;
 
-    let mut map = Map::new(16, 16);
+    let mut map = Map::new(32, 32);
     rlr::map_utils::make_map(&mut map);
 
     let player = Entity{
