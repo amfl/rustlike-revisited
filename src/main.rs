@@ -20,11 +20,11 @@ fn main() {
     let mut running = true;
 
     let mut map = Map::new(32, 32);
-    rlr::map_utils::make_map(&mut map);
+    let (px, py) = rlr::map_utils::make_map(&mut map);
 
     let player = Entity{
-        x: 8,
-        y: 4,
+        x: px as i32,
+        y: py as i32,
         glyph: '@'
     };
     let npc = Entity{
