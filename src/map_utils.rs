@@ -1,7 +1,9 @@
 extern crate rand;
+extern crate std;
 
 // use rand::Rng;
 use map_utils::rand::Rng;
+use std::cmp;
 // I have absolutely no idea why it thinks rand is in map_utils...
 
 use map::Map;
@@ -27,6 +29,22 @@ impl Rect {
     pub fn center(self: &Self) -> (usize, usize) {
         ((self.x1 + self.x2) / 2,
          (self.y1 + self.y2) / 2)
+    }
+}
+
+pub fn make_h_tunnel(map: &mut Map, x1: usize, x2: usize, y: usize) {
+    for x in cmp::min(x1, x2)..cmp::max(x1, x2)+1 {
+        let tile = &mut map.data[y][x];
+        tile.walkable = true;
+        tile.transparent = true;
+    }
+}
+
+pub fn make_v_tunnel(map: &mut Map, y1: usize, y2: usize, x: usize) {
+    for y in cmp::min(y1, y2)..cmp::max(y1, y2)+1 {
+        let tile = &mut map.data[y][x];
+        tile.walkable = true;
+        tile.transparent = true;
     }
 }
 
@@ -60,6 +78,25 @@ pub fn make_map(map: &mut Map) -> (usize, usize) {
         let room = Rect::new(x, y, w, h);
         if rooms.iter().all(|it| !it.intersects(&room) ) {
             make_room(map, &room);
+
+            // Join this room with the previous one
+            if let Some(old_room) = rooms.last() {
+                let (new_x, new_y) = room.center();
+                let (old_x, old_y) = old_room.center();
+                if rng.gen() {
+                    // Horizontal first
+                    info!("Horizontal first");
+                    make_h_tunnel(map, old_x, new_x, old_y);
+                    make_v_tunnel(map, old_y, new_y, new_x);
+                }
+                else {
+                    // Vertical first
+                    info!("Vertical first");
+                    make_v_tunnel(map, old_y, new_y, old_x);
+                    make_h_tunnel(map, old_x, new_x, new_y);
+                }
+            }
+
             rooms.push(room);
         }
     }
