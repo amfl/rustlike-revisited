@@ -3,6 +3,10 @@
 #[macro_use]
 extern crate log;
 
+#[cfg(test)]
+#[macro_use]
+extern crate quickcheck;
+
 // Define the modules this library exports.
 pub mod entity;
 pub mod event;
@@ -10,3 +14,7 @@ pub mod input_handlers;
 pub mod render_functions;
 pub mod map;
 pub mod map_utils;
+
+pub mod fov;
+pub mod point;
+pub mod pcgen;
