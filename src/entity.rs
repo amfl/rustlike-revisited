@@ -17,6 +17,7 @@ pub struct Entity {
     pub glyph: char,
     pub fg: Color,
     pub bg: Color,
+    pub blocks: bool,
 }
 
 impl Entity {
@@ -24,4 +25,8 @@ impl Entity {
         self.x += dx;
         self.y += dy;
     }
+}
+
+pub fn get_blocking_entities_at(entities: &Vec<Entity>, x: i32, y: i32) -> Vec<&Entity> {
+    entities.iter().filter(|ent| ent.x == x && ent.y == y).collect()
 }

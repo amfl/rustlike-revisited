@@ -29,14 +29,16 @@ fn main() {
         y: py as i32,
         fg: Color::Red,
         bg: Color::Default,
-        glyph: '@'
+        glyph: '@',
+        blocks: true,
     };
     let npc = Entity{
         x: 3,
         y: 3,
         fg: Color::Blue,
         bg: Color::Default,
-        glyph: '$'
+        glyph: '$',
+        blocks: true,
     };
 
     let mut entities = vec![player, npc];
@@ -60,10 +62,18 @@ fn main() {
                     Some(event) => match event {
                         Event::Quit => { running = false; },
                         Event::Movement((dx, dy)) => {
-                            let player = &mut entities[0];
-                            let pos = (player.x + dx, player.y + dy);
+                            let pos = {
+                                let player = &entities[0];
+                                (player.x + dx, player.y + dy)
+                            };
                             if map.data[pos.1 as usize][pos.0 as usize].walkable {
-                                player.mov(dx, dy);
+                                if rlr::entity::get_blocking_entities_at(&entities, pos.0, pos.1).len() > 0 {
+                                    info!("Punt!");
+                                }
+                                else {
+                                    let player = &mut entities[0];
+                                    player.mov(dx, dy);
+                                }
                             }
                         },
                     },
