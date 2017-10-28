@@ -3,21 +3,22 @@ extern crate std;
 
 // use rand::Rng;
 use map_utils::rand::Rng;
-use std::cmp;
 // I have absolutely no idea why it thinks rand is in map_utils...
+
+use std::cmp;
 
 use map::Map;
 
 pub struct Rect {
-    x1: usize,
-    y1: usize,
-    x2: usize,
-    y2: usize,
+    x1: i32,
+    y1: i32,
+    x2: i32,
+    y2: i32,
 }
 
 impl Rect {
-    pub fn new(x: usize, y: usize, w: usize, h: usize) -> Self {
-        Rect{ x1: x, x2: x+w, y1: y, y2: y+h }
+    pub fn new(x: i32, y: i32, w: usize, h: usize) -> Self {
+        Rect{ x1: x, x2: x+w as i32, y1: y, y2: y+h as i32 }
     }
 
     /// Returns true if this rectangle intersects with another one
@@ -26,23 +27,23 @@ impl Rect {
             self.y1 <= other.y2 && self.y2 >= other.y1
     }
 
-    pub fn center(self: &Self) -> (usize, usize) {
+    pub fn center(self: &Self) -> (i32, i32) {
         ((self.x1 + self.x2) / 2,
          (self.y1 + self.y2) / 2)
     }
 }
 
-pub fn make_h_tunnel(map: &mut Map, x1: usize, x2: usize, y: usize) {
+pub fn make_h_tunnel(map: &mut Map, x1: i32, x2: i32, y: i32) {
     for x in cmp::min(x1, x2)..cmp::max(x1, x2)+1 {
-        let tile = &mut map.data[y][x];
+        let tile = map.at_mut(x, y);
         tile.walkable = true;
         tile.transparent = true;
     }
 }
 
-pub fn make_v_tunnel(map: &mut Map, y1: usize, y2: usize, x: usize) {
+pub fn make_v_tunnel(map: &mut Map, y1: i32, y2: i32, x: i32) {
     for y in cmp::min(y1, y2)..cmp::max(y1, y2)+1 {
-        let tile = &mut map.data[y][x];
+        let tile = &mut map.at_mut(x, y);
         tile.walkable = true;
         tile.transparent = true;
     }
@@ -51,7 +52,7 @@ pub fn make_v_tunnel(map: &mut Map, y1: usize, y2: usize, x: usize) {
 pub fn make_room(map: &mut Map, room: &Rect) {
     for x in room.x1..room.x2 {
         for y in room.y1..room.y2 {
-            let tile = &mut map.data[y][x];
+            let tile = &mut map.at_mut(x, y);
             tile.walkable = true;
             tile.transparent = true;
         }
@@ -59,7 +60,7 @@ pub fn make_room(map: &mut Map, room: &Rect) {
 }
 
 /// Returns player starting position
-pub fn make_map(map: &mut Map) -> (usize, usize) {
+pub fn make_map(map: &mut Map) -> (i32, i32) {
     let room_max_size = 10;
     let room_min_size = 6;
     let max_rooms = 30;
@@ -72,8 +73,8 @@ pub fn make_map(map: &mut Map) -> (usize, usize) {
         let mut rng = rand::thread_rng();
         let w = rng.gen_range::<usize>(room_min_size, room_max_size);
         let h = rng.gen_range::<usize>(room_min_size, room_max_size);
-        let x = rng.gen_range::<usize>(0, map_width - w - 1);
-        let y = rng.gen_range::<usize>(0, map_height - h - 1);
+        let x = rng.gen_range::<i32>(0, (map_width - w) as i32 - 1);
+        let y = rng.gen_range::<i32>(0, (map_height - h) as i32 - 1);
 
         let room = Rect::new(x, y, w, h);
         if rooms.iter().all(|it| !it.intersects(&room) ) {

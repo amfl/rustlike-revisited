@@ -23,6 +23,14 @@ impl Map {
 
         Map{data: grid}
     }
+    pub fn at(self: &Self, x: i32, y: i32) -> &Tile {
+        // Just cast to usize for now - implementation may change.
+        & self.data[y as usize][x as usize]
+    }
+    pub fn at_mut(self: &mut Self, x: i32, y: i32) -> &mut Tile {
+        // Just cast to usize for now - implementation may change.
+        &mut self.data[y as usize][x as usize]
+    }
 }
 
 #[cfg(test)]
