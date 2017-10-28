@@ -8,6 +8,7 @@ use map_utils::rand::Rng;
 use std::cmp;
 
 use map::Map;
+use entity::{Color, Entity};
 
 pub struct Rect {
     x1: i32,
@@ -30,6 +31,29 @@ impl Rect {
     pub fn center(self: &Self) -> (i32, i32) {
         ((self.x1 + self.x2) / 2,
          (self.y1 + self.y2) / 2)
+    }
+}
+
+pub fn place_entities(room: &Rect, entities: &mut Vec<Entity>, max_monsters_per_room: usize) {
+    let mut rng = rand::thread_rng();
+    let num_monsters = rng.gen_range::<usize>(0, max_monsters_per_room);
+
+    for _ in 0..num_monsters {
+        // Choose a random location in this room
+        let x = rng.gen_range::<i32>(room.x1, room.x2+1);
+        let y = rng.gen_range::<i32>(room.y1, room.y2+1);
+
+        if !entities.iter().any(|ent| ent.x == x && ent.y == y) {
+            entities.push(
+                Entity {
+                    x: x,
+                    y: y,
+                    glyph: 'o',
+                    fg: Color::Green,
+                    bg: Color::Default,
+                }
+            )
+        }
     }
 }
 
