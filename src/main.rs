@@ -20,7 +20,9 @@ fn main() {
     let mut running = true;
 
     let mut map = Map::new(32, 32);
-    let (px, py) = rlr::map_utils::make_map(&mut map);
+    let mut mobs = Vec::new();
+
+    let (px, py) = rlr::map_utils::make_map(&mut map, &mut mobs);
 
     let player = Entity{
         x: px as i32,
@@ -38,6 +40,8 @@ fn main() {
     };
 
     let mut entities = vec![player, npc];
+    entities.append(&mut mobs);
+
     let mut renderer = rlr::render_functions::Renderer::new();
     rlr::render_functions::Renderer::static_init();
 

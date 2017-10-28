@@ -40,8 +40,8 @@ pub fn place_entities(room: &Rect, entities: &mut Vec<Entity>, max_monsters_per_
 
     for _ in 0..num_monsters {
         // Choose a random location in this room
-        let x = rng.gen_range::<i32>(room.x1, room.x2+1);
-        let y = rng.gen_range::<i32>(room.y1, room.y2+1);
+        let x = rng.gen_range::<i32>(room.x1, room.x2);
+        let y = rng.gen_range::<i32>(room.y1, room.y2);
 
         if !entities.iter().any(|ent| ent.x == x && ent.y == y) {
             entities.push(
@@ -84,10 +84,11 @@ pub fn make_room(map: &mut Map, room: &Rect) {
 }
 
 /// Returns player starting position
-pub fn make_map(map: &mut Map) -> (i32, i32) {
+pub fn make_map(map: &mut Map, entities: &mut Vec<Entity>) -> (i32, i32) {
     let room_max_size = 10;
     let room_min_size = 6;
     let max_rooms = 30;
+    let max_monsters_per_room = 4;
 
     let map_height = map.data.len();
     let map_width = map.data[0].len();
@@ -121,6 +122,8 @@ pub fn make_map(map: &mut Map) -> (i32, i32) {
                     make_h_tunnel(map, old_x, new_x, new_y);
                 }
             }
+
+            place_entities(&room, entities, max_monsters_per_room);
 
             rooms.push(room);
         }
