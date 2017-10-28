@@ -18,6 +18,7 @@ pub struct Entity {
     pub fg: Color,
     pub bg: Color,
     pub blocks: bool,
+    pub name: String,
 }
 
 impl Entity {

@@ -52,6 +52,7 @@ pub fn place_entities(room: &Rect, entities: &mut Vec<Entity>, max_monsters_per_
                     fg: Color::Green,
                     bg: Color::Default,
                     blocks: true,
+                    name: String::from("Orc"),
                 }
             )
         }

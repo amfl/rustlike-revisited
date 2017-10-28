@@ -7,6 +7,7 @@ extern crate env_logger;
 use rlr::event::Event;
 use rlr::entity::{Entity, Color};
 use rlr::map::Map;
+use rlr::game_state::GameState;
 
 fn main() {
     // Initialize the logger in the main executable.
@@ -31,6 +32,7 @@ fn main() {
         bg: Color::Default,
         glyph: '@',
         blocks: true,
+        name: String::from("Player"),
     };
     let npc = Entity{
         x: 3,
@@ -39,6 +41,7 @@ fn main() {
         bg: Color::Default,
         glyph: '$',
         blocks: true,
+        name: String::from("Mysterious Glyph"),
     };
 
     let mut entities = vec![player, npc];
@@ -46,6 +49,8 @@ fn main() {
 
     let mut renderer = rlr::render_functions::Renderer::new();
     rlr::render_functions::Renderer::static_init();
+
+    let mut game_state = GameState::PlayerTurn;
 
     while running {
         renderer.render_all(&win, &map, &entities);
@@ -62,22 +67,33 @@ fn main() {
                     Some(event) => match event {
                         Event::Quit => { running = false; },
                         Event::Movement((dx, dy)) => {
-                            let pos = {
-                                let player = &entities[0];
-                                (player.x + dx, player.y + dy)
-                            };
-                            if map.data[pos.1 as usize][pos.0 as usize].walkable {
-                                if rlr::entity::get_blocking_entities_at(&entities, pos.0, pos.1).len() > 0 {
-                                    info!("Punt!");
+                            if let GameState::PlayerTurn = game_state {
+                                let pos = {
+                                    let player = &entities[0];
+                                    (player.x + dx, player.y + dy)
+                                };
+                                if map.data[pos.1 as usize][pos.0 as usize].walkable {
+                                    if rlr::entity::get_blocking_entities_at(&entities, pos.0, pos.1).len() > 0 {
+                                        info!("Punt!");
+                                    }
+                                    else {
+                                        let player = &mut entities[0];
+                                        player.mov(dx, dy);
+                                    }
                                 }
-                                else {
-                                    let player = &mut entities[0];
-                                    player.mov(dx, dy);
-                                }
+                                game_state = GameState::AITurn;
                             }
                         },
                     },
                     None => {}
+                }
+                if let GameState::AITurn = game_state {
+                    for ent in entities.iter() {
+                        if ent.name != "Player" {
+                            info!("The {} ponders the meaning of its existence.", ent.name);
+                        }
+                    }
+                    game_state = GameState::PlayerTurn;
                 }
             }
             None => {}
