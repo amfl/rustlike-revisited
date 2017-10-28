@@ -5,7 +5,7 @@ extern crate log;
 extern crate env_logger;
 
 use rlr::event::Event;
-use rlr::entity::Entity;
+use rlr::entity::{Entity, Color};
 use rlr::map::Map;
 
 fn main() {
@@ -25,23 +25,30 @@ fn main() {
     let player = Entity{
         x: px as i32,
         y: py as i32,
+        fg: Color::Red,
+        bg: Color::Default,
         glyph: '@'
     };
     let npc = Entity{
         x: 3,
         y: 3,
+        fg: Color::Blue,
+        bg: Color::Default,
         glyph: '$'
     };
+
     let mut entities = vec![player, npc];
+    let mut renderer = rlr::render_functions::Renderer::new();
+    rlr::render_functions::Renderer::static_init();
 
     while running {
-        rlr::render_functions::render_all(&win, &map, &entities);
+        renderer.render_all(&win, &map, &entities);
         win.refresh();
         pancurses::noecho();
         pancurses::curs_set(0);
 
         let input = win.getch();
-        rlr::render_functions::clear_entity(&win, &entities[0]);
+        renderer.clear_entity(&win, &entities[0]);
 
         match input {
             Some(x) => {
