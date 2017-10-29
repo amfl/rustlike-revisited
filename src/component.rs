@@ -1,0 +1,32 @@
+use specs::{Component, VecStorage};
+use entity::Color;
+
+#[derive(Debug)]
+pub struct Position {
+    pub x: i32,
+    pub y: i32,
+}
+impl Component for Position {
+    type Storage = VecStorage<Self>;
+}
+
+#[derive(Debug)]
+pub struct MoveDelta {
+    pub dx: i32,
+    pub dy: i32,
+}
+impl Component for MoveDelta {
+    type Storage = VecStorage<Self>;
+}
+
+#[derive(Debug)]
+pub struct BaseEntity {
+    pub glyph: char,
+    pub fg: Color,
+    pub bg: Color,
+    pub blocks: bool,
+    pub name: String,
+}
+impl Component for BaseEntity {
+    type Storage = VecStorage<Self>;
+}

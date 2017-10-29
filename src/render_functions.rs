@@ -1,6 +1,6 @@
 extern crate pancurses;
 
-use entity::{Entity, Color};
+use entity::Color;
 use map::Map;
 use std::collections::HashMap;
 

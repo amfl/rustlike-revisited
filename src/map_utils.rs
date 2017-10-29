@@ -8,7 +8,7 @@ use map_utils::rand::Rng;
 use std::cmp;
 
 use map::Map;
-use entity::{Color, Entity};
+use entity::{Color};
 
 pub struct Rect {
     x1: i32,
@@ -34,7 +34,7 @@ impl Rect {
     }
 }
 
-pub fn place_entities(room: &Rect, entities: &mut Vec<Entity>, max_monsters_per_room: usize) {
+pub fn place_entities(room: &Rect, max_monsters_per_room: usize) {
     let mut rng = rand::thread_rng();
     let num_monsters = rng.gen_range::<usize>(0, max_monsters_per_room);
 
@@ -43,19 +43,19 @@ pub fn place_entities(room: &Rect, entities: &mut Vec<Entity>, max_monsters_per_
         let x = rng.gen_range::<i32>(room.x1, room.x2);
         let y = rng.gen_range::<i32>(room.y1, room.y2);
 
-        if !entities.iter().any(|ent| ent.x == x && ent.y == y) {
-            entities.push(
-                Entity {
-                    x: x,
-                    y: y,
-                    glyph: 'o',
-                    fg: Color::Green,
-                    bg: Color::Default,
-                    blocks: true,
-                    name: String::from("Orc"),
-                }
-            )
-        }
+        // if !entities.iter().any(|ent| ent.x == x && ent.y == y) {
+        //     entities.push(
+        //         Entity {
+        //             x: x,
+        //             y: y,
+        //             glyph: 'o',
+        //             fg: Color::Green,
+        //             bg: Color::Default,
+        //             blocks: true,
+        //             name: String::from("Orc"),
+        //         }
+        //     )
+        // }
     }
 }
 
@@ -86,7 +86,7 @@ pub fn make_room(map: &mut Map, room: &Rect) {
 }
 
 /// Returns player starting position
-pub fn make_map(map: &mut Map, entities: &mut Vec<Entity>) -> (i32, i32) {
+pub fn make_map(map: &mut Map) -> (i32, i32) {
     let room_max_size = 10;
     let room_min_size = 6;
     let max_rooms = 30;
@@ -125,7 +125,7 @@ pub fn make_map(map: &mut Map, entities: &mut Vec<Entity>) -> (i32, i32) {
                 }
             }
 
-            place_entities(&room, entities, max_monsters_per_room);
+            // place_entities(&room, entities, max_monsters_per_room);
 
             rooms.push(room);
         }
