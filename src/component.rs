@@ -1,4 +1,4 @@
-use specs::{Component, VecStorage};
+use specs::{Component, VecStorage, NullStorage};
 use entity::Color;
 
 #[derive(Debug)]
@@ -29,4 +29,10 @@ pub struct BaseEntity {
 }
 impl Component for BaseEntity {
     type Storage = VecStorage<Self>;
+}
+
+#[derive(Default)]
+pub struct Puppeted;
+impl Component for Puppeted {
+    type Storage = NullStorage<Self>;
 }

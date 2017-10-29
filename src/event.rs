@@ -1,3 +1,5 @@
+extern crate pancurses;
+
 pub enum Direction {
     Up,
     Down,
@@ -8,4 +10,8 @@ pub enum Direction {
 pub enum Event {
     Movement((i32, i32)),
     Quit,
+}
+
+pub struct IOEvent {
+    pub input: Option<pancurses::Input>,
 }

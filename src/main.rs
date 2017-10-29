@@ -5,12 +5,12 @@ extern crate log;
 extern crate env_logger;
 extern crate specs;
 
-use rlr::event::Event;
+use rlr::event::{Event, IOEvent};
 use rlr::entity::{Color};
 use rlr::map::Map;
 use rlr::game_state::GameState;
 
-use rlr::component::{Position, MoveDelta, BaseEntity};
+use rlr::component::{Position, MoveDelta, BaseEntity, Puppeted};
 use specs::World;
 use specs::DispatcherBuilder;
 
@@ -28,6 +28,7 @@ fn main() {
     world.register::<Position>();
     world.register::<MoveDelta>();
     world.register::<BaseEntity>();
+    world.register::<Puppeted>();
 
     let mut running = true;
 
@@ -37,6 +38,7 @@ fn main() {
     let (px, py) = rlr::map_utils::make_map(&mut map);
 
     let player = world.create_entity()
+        .with(Puppeted)
         .with(Position { x: px as i32, y: py as i32 })
         .with(MoveDelta { dx: 0, dy: 0 })
         .with(BaseEntity {
@@ -69,61 +71,68 @@ fn main() {
 
     // SPECS: Systems + Dispatcher
     let mut update_pos = rlr::system::UpdatePos;
-    let mut render_system = rlr::system::RenderSystem;
+    // let mut render_system = rlr::system::RenderSystem;
+    let mut input_system = rlr::system::InputSystem;
 
     let mut dispatcher = DispatcherBuilder::new()
-        .add(update_pos, "update_pos", &[])
-        .add_thread_local(render_system)
+        .add(input_system, "input_system", &[])
+        .add(update_pos, "update_pos", &["input_system"])
+        // .add_thread_local(render_system)
         .build();
+
+    world.add_resource(IOEvent{ input: None });
+
+    pancurses::noecho();
+    pancurses::curs_set(0);
 
     while running {
         // renderer.render_all(&win, &map, &entities);
-        win.refresh();
-        pancurses::noecho();
-        pancurses::curs_set(0);
+
+        // Push the input into the world as a resource.
+        let input = win.getch();
+        {
+            let mut x = world.write_resource::<IOEvent>();
+            *x = IOEvent{ input: input.clone() };
+        }
+
+        if let Some(x) = input {
+            if let Some(event) = rlr::input_handlers::handle_keys(x) {
+                match event {
+                    Event::Quit => { running = false; },
+                    Event::Movement((dx, dy)) => {
+                        if let GameState::PlayerTurn = game_state {
+                            // let pos = {
+                            //     let player = &entities[0];
+                            //     (player.x + dx, player.y + dy)
+                            // };
+                            // if map.data[pos.1 as usize][pos.0 as usize].walkable {
+                            //     // if rlr::entity::get_blocking_entities_at(&entities, pos.0, pos.1).len() > 0 {
+                            //     //     info!("Punt!");
+                            //     // }
+                            //     // else {
+                            //     //     let player = &mut entities[0];
+                            //     //     player.mov(dx, dy);
+                            //     // }
+                            // }
+                            // game_state = GameState::AITurn;
+                        }
+                    },
+                }
+            }
+        }
 
         dispatcher.dispatch(&world.res);
 
-        let input = win.getch();
+        if let GameState::AITurn = game_state {
+            // for ent in entities.iter() {
+            //     if ent.name != "Player" {
+            //         info!("The {} ponders the meaning of its existence.", ent.name);
+            //     }
+            // }
+            game_state = GameState::PlayerTurn;
+        }
         // renderer.clear_entity(&win, &entities[0]);
 
-        match input {
-            Some(x) => {
-                match rlr::input_handlers::handle_keys(x) {
-                    Some(event) => match event {
-                        Event::Quit => { running = false; },
-                        Event::Movement((dx, dy)) => {
-                            if let GameState::PlayerTurn = game_state {
-                                // let pos = {
-                                //     let player = &entities[0];
-                                //     (player.x + dx, player.y + dy)
-                                // };
-                                // if map.data[pos.1 as usize][pos.0 as usize].walkable {
-                                //     // if rlr::entity::get_blocking_entities_at(&entities, pos.0, pos.1).len() > 0 {
-                                //     //     info!("Punt!");
-                                //     // }
-                                //     // else {
-                                //     //     let player = &mut entities[0];
-                                //     //     player.mov(dx, dy);
-                                //     // }
-                                // }
-                                // game_state = GameState::AITurn;
-                            }
-                        },
-                    },
-                    None => {}
-                }
-                if let GameState::AITurn = game_state {
-                    // for ent in entities.iter() {
-                    //     if ent.name != "Player" {
-                    //         info!("The {} ponders the meaning of its existence.", ent.name);
-                    //     }
-                    // }
-                    game_state = GameState::PlayerTurn;
-                }
-            }
-            None => {}
-        }
 
     }
 

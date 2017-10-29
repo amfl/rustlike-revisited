@@ -1,5 +1,8 @@
-use specs::{ReadStorage, WriteStorage, System, Join};
-use component::{MoveDelta, Position, BaseEntity};
+extern crate pancurses;
+
+use specs::{ReadStorage, WriteStorage, System, Join, Fetch};
+use component::{MoveDelta, Position, BaseEntity, Puppeted};
+use event::{Event, IOEvent};
 
 pub struct UpdatePos;
 
@@ -18,13 +21,38 @@ impl <'a> System<'a> for UpdatePos {
     }
 }
 
-pub struct RenderSystem;
+// pub struct RenderSystem {
+//     pub win: pancurses::Window,
+// }
 
-impl <'a> System<'a> for RenderSystem {
-    type SystemData = ( ReadStorage<'a, Position>,
-                        ReadStorage<'a, BaseEntity> );
+// impl RenderSystem {
+//     pub fn getch(self: &Self) -> Option<pancurses::Input> {
+//         self.win.getch()
+//     }
+//     pub fn refresh(self: &Self) -> i32 {
+//         self.win.refresh()
+//     }
+// }
 
-    fn run(&mut self, (pos, ent): Self::SystemData) {
-        info!("Rendered a frame.");
+// impl <'a> System<'a> for RenderSystem {
+//     type SystemData = ( ReadStorage<'a, Position>,
+//                         ReadStorage<'a, BaseEntity> );
+
+//     fn run(&mut self, (pos, ent): Self::SystemData) {
+//         info!("Rendered a frame.");
+
+//         self.win.refresh();
+//     }
+// }
+
+pub struct InputSystem;
+
+impl <'a> System<'a> for InputSystem {
+    type SystemData = ( Fetch<'a, IOEvent>,
+                        ReadStorage<'a, Puppeted>,
+                        WriteStorage<'a, MoveDelta> );
+
+    fn run(&mut self, (input, puppet, mut mov): Self::SystemData) {
+        info!("Moving player");
     }
 }
