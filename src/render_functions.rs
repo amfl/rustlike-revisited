@@ -1,8 +1,11 @@
 extern crate pancurses;
+extern crate specs;
 
 use entity::Color;
 use map::Map;
+use component::{Position, BaseEntity};
 use std::collections::HashMap;
+use specs::{World, Join};
 
 pub struct Renderer {
     pairs: HashMap<(Color, Color), u32>,
@@ -42,7 +45,7 @@ impl Renderer {
         }
     }
 
-    pub fn render_all(self: &mut Self, win: &pancurses::Window, map: &Map, entities: &Vec<Entity>) {
+    pub fn render_all(self: &mut Self, win: &pancurses::Window, map: &Map, world: &World) {
         for y in 0..map.data.len() {
             for x in 0..map.data[0].len() {
                 let tile = map.data[y][x];
@@ -55,24 +58,38 @@ impl Renderer {
             }
         }
 
-        for ent in entities.iter() {
-            self.draw_entity(win, ent);
+
+        // Simple console rendering
+        let positions = world.read::<Position>();
+        let baseEnt = world.read::<BaseEntity>();
+        for entity in world.entities().join() {
+            if let Some(base) = baseEnt.get(entity) {
+                if let Some(pos) = positions.get(entity) {
+                    win.attrset(pancurses::COLOR_PAIR(self.get_pair(base.fg.clone(), base.bg.clone())));
+                    win.mvprintw(pos.y, pos.x, &base.glyph.to_string());
+                }
+            }
         }
-    }
-
-    pub fn clear_all(self: &mut Self, win: &pancurses::Window, entities: &Vec<Entity>) {
-        for ent in entities.iter() {
-            self.clear_entity(win, ent);
-        }
-    }
-
-    pub fn draw_entity(self: &mut Self, win: &pancurses::Window, ent: &Entity) {
-        win.attrset(pancurses::COLOR_PAIR(self.get_pair(ent.fg.clone(), ent.bg.clone())));
-        win.mvprintw(ent.y, ent.x, &ent.glyph.to_string());
-    }
-
-    pub fn clear_entity(self: &mut Self, win: &pancurses::Window, ent: &Entity) {
         win.attrset(pancurses::COLOR_PAIR(0));
-        win.mvprintw(ent.y, ent.x, " ");
+
+        // for ent in entities.iter() {
+        //     self.draw_entity(win, ent);
+        // }
     }
+
+    pub fn clear_all(self: &mut Self, win: &pancurses::Window, world: &World) {
+        // for ent in entities.iter() {
+        //     self.clear_entity(win, ent);
+        // }
+    }
+
+    // pub fn draw_entity(self: &mut Self, win: &pancurses::Window, ent: &Entity) {
+    //     win.attrset(pancurses::COLOR_PAIR(self.get_pair(ent.fg.clone(), ent.bg.clone())));
+    //     win.mvprintw(ent.y, ent.x, &ent.glyph.to_string());
+    // }
+
+    // pub fn clear_entity(self: &mut Self, win: &pancurses::Window, ent: &Entity) {
+    //     win.attrset(pancurses::COLOR_PAIR(0));
+    //     win.mvprintw(ent.y, ent.x, " ");
+    // }
 }

@@ -51,7 +51,7 @@ fn main() {
         .build();
 
     let npc = world.create_entity()
-        .with(Position { x: px as i32, y: py as i32 })
+        .with(Position { x: 5, y: 5 })
         .with(BaseEntity {
                 fg: Color::Blue,
                 bg: Color::Default,
@@ -64,8 +64,8 @@ fn main() {
     let mut entities = vec![player, npc];
     entities.append(&mut mobs);
 
-    // let mut renderer = rlr::render_functions::Renderer::new();
-    // rlr::render_functions::Renderer::static_init();
+    let mut renderer = rlr::render_functions::Renderer::new();
+    rlr::render_functions::Renderer::static_init();
 
     let mut game_state = GameState::PlayerTurn;
 
@@ -86,7 +86,7 @@ fn main() {
     pancurses::curs_set(0);
 
     while running {
-        // renderer.render_all(&win, &map, &entities);
+        renderer.render_all(&win, &map, &world);
 
         // Push the input into the world as a resource.
         let input = win.getch();
@@ -121,8 +121,6 @@ fn main() {
             }
         }
 
-        dispatcher.dispatch(&world.res);
-
         if let GameState::AITurn = game_state {
             // for ent in entities.iter() {
             //     if ent.name != "Player" {
@@ -131,6 +129,13 @@ fn main() {
             // }
             game_state = GameState::PlayerTurn;
         }
+
+        dispatcher.dispatch(&world.res);
+
+        // Maintain dynamically added and removed entities in dispatch.
+        // This is what actually executes changes done by `LazyUpdate`.
+        world.maintain();
+
         // renderer.clear_entity(&win, &entities[0]);
 
 
