@@ -2,7 +2,7 @@ extern crate pancurses;
 
 use specs::{ReadStorage, WriteStorage, System, Join, Fetch};
 use component::{MoveDelta, Position, BaseEntity, Puppeted};
-use event::{Event, IOEvent};
+use event::{Event, EventQueue};
 
 pub struct UpdatePos;
 
@@ -45,14 +45,26 @@ impl <'a> System<'a> for UpdatePos {
 //     }
 // }
 
-pub struct InputSystem;
+pub struct EventSystem;
 
-impl <'a> System<'a> for InputSystem {
-    type SystemData = ( Fetch<'a, IOEvent>,
+impl <'a> System<'a> for EventSystem {
+    type SystemData = ( Fetch<'a, EventQueue>,
                         ReadStorage<'a, Puppeted>,
-                        WriteStorage<'a, MoveDelta> );
+                        WriteStorage<'a, Position> );
 
-    fn run(&mut self, (input, puppet, mut mov): Self::SystemData) {
-        info!("Moving player");
+    fn run(&mut self, data: Self::SystemData) {
+        let (events, puppet, mut pos) = data;
+        for event in events.0.iter() {
+            info!("Detected event: {:?}", event);
+            match event {
+                &Event::Movement((dx, dy)) => {
+                    for (puppet, mut pos) in (&puppet, &mut pos).join() {
+                        pos.x += dx;
+                        pos.y += dy;
+                    }
+                },
+                _ => {}
+            }
+        }
     }
 }

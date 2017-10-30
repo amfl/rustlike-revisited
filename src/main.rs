@@ -5,7 +5,7 @@ extern crate log;
 extern crate env_logger;
 extern crate specs;
 
-use rlr::event::{Event, IOEvent};
+use rlr::event::{Event, EventQueue};
 use rlr::entity::{Color};
 use rlr::map::Map;
 use rlr::game_state::GameState;
@@ -72,15 +72,15 @@ fn main() {
     // SPECS: Systems + Dispatcher
     let mut update_pos = rlr::system::UpdatePos;
     // let mut render_system = rlr::system::RenderSystem;
-    let mut input_system = rlr::system::InputSystem;
+    let mut event_system = rlr::system::EventSystem;
 
     let mut dispatcher = DispatcherBuilder::new()
-        .add(input_system, "input_system", &[])
-        .add(update_pos, "update_pos", &["input_system"])
+        .add(event_system, "event_system", &[])
+        .add(update_pos, "update_pos", &["event_system"])
         // .add_thread_local(render_system)
         .build();
 
-    world.add_resource(IOEvent{ input: None });
+    world.add_resource(EventQueue(Vec::new()));
 
     pancurses::noecho();
     pancurses::curs_set(0);
@@ -90,47 +90,59 @@ fn main() {
 
         // Push the input into the world as a resource.
         let input = win.getch();
-        {
-            let mut x = world.write_resource::<IOEvent>();
-            *x = IOEvent{ input: input.clone() };
-        }
 
         if let Some(x) = input {
             if let Some(event) = rlr::input_handlers::handle_keys(x) {
                 match event {
+                    // Some system events we need to handle here
                     Event::Quit => { running = false; },
-                    Event::Movement((dx, dy)) => {
-                        if let GameState::PlayerTurn = game_state {
-                            // let pos = {
-                            //     let player = &entities[0];
-                            //     (player.x + dx, player.y + dy)
-                            // };
-                            // if map.data[pos.1 as usize][pos.0 as usize].walkable {
-                            //     // if rlr::entity::get_blocking_entities_at(&entities, pos.0, pos.1).len() > 0 {
-                            //     //     info!("Punt!");
-                            //     // }
-                            //     // else {
-                            //     //     let player = &mut entities[0];
-                            //     //     player.mov(dx, dy);
-                            //     // }
-                            // }
-                            // game_state = GameState::AITurn;
-                        }
+
+                    // But almost everything else can be handled from the ECS
+                    // Just chuck it on the event queue ;D
+                    other => {
+                        let mut x = world.write_resource::<EventQueue>();
+                        (*x).0.push(other);
                     },
+
+                    // Event::Movement((dx, dy)) => {
+                    //     if let GameState::PlayerTurn = game_state {
+                    //         // let pos = {
+                    //         //     let player = &entities[0];
+                    //         //     (player.x + dx, player.y + dy)
+                    //         // };
+                    //         // if map.data[pos.1 as usize][pos.0 as usize].walkable {
+                    //         //     // if rlr::entity::get_blocking_entities_at(&entities, pos.0, pos.1).len() > 0 {
+                    //         //     //     info!("Punt!");
+                    //         //     // }
+                    //         //     // else {
+                    //         //     //     let player = &mut entities[0];
+                    //         //     //     player.mov(dx, dy);
+                    //         //     // }
+                    //         // }
+                    //         // game_state = GameState::AITurn;
+                    //     }
+                    // },
+
                 }
             }
         }
 
-        if let GameState::AITurn = game_state {
-            // for ent in entities.iter() {
-            //     if ent.name != "Player" {
-            //         info!("The {} ponders the meaning of its existence.", ent.name);
-            //     }
-            // }
-            game_state = GameState::PlayerTurn;
-        }
+        // if let GameState::AITurn = game_state {
+        //     // for ent in entities.iter() {
+        //     //     if ent.name != "Player" {
+        //     //         info!("The {} ponders the meaning of its existence.", ent.name);
+        //     //     }
+        //     // }
+        //     game_state = GameState::PlayerTurn;
+        // }
 
         dispatcher.dispatch(&world.res);
+
+        // We're all done with the events, so let's clear them out
+        {
+            let mut x = world.write_resource::<EventQueue>();
+            (*x).0 = Vec::new();
+        }
 
         // Maintain dynamically added and removed entities in dispatch.
         // This is what actually executes changes done by `LazyUpdate`.
