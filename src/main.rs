@@ -81,12 +81,13 @@ fn main() {
         .build();
 
     world.add_resource(EventQueue(Vec::new()));
+    world.add_resource(map);
 
     pancurses::noecho();
     pancurses::curs_set(0);
 
     while running {
-        renderer.render_all(&win, &map, &world);
+        renderer.render_all(&win, &world);
 
         // Push the input into the world as a resource.
         let input = win.getch();

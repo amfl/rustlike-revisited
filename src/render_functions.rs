@@ -46,7 +46,8 @@ impl Renderer {
     }
 
     /// Render the map and all entities
-    pub fn render_all(self: &mut Self, win: &pancurses::Window, map: &Map, world: &World) {
+    pub fn render_all(self: &mut Self, win: &pancurses::Window, world: &World) {
+        let map = world.read_resource::<Map>();
         // Render the map
         for y in 0..map.data.len() {
             for x in 0..map.data[0].len() {
