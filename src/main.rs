@@ -8,7 +8,7 @@ extern crate specs;
 use rlr::event::{Event, EventQueue};
 use rlr::entity::{Color};
 use rlr::map::Map;
-use rlr::game_state::GameState;
+// use rlr::game_state::GameState;
 
 use rlr::component::{Position, MoveDelta, BaseEntity, Puppeted};
 use specs::World;
@@ -67,12 +67,12 @@ fn main() {
     let mut renderer = rlr::render_functions::Renderer::new();
     rlr::render_functions::Renderer::static_init();
 
-    let mut game_state = GameState::PlayerTurn;
+    // let mut game_state = GameState::PlayerTurn;
 
     // SPECS: Systems + Dispatcher
-    let mut update_pos = rlr::system::UpdatePos;
+    let update_pos = rlr::system::UpdatePos;
     // let mut render_system = rlr::system::RenderSystem;
-    let mut event_system = rlr::system::EventSystem;
+    let event_system = rlr::system::EventSystem;
 
     let mut dispatcher = DispatcherBuilder::new()
         .add(event_system, "event_system", &[])
