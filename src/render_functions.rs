@@ -45,7 +45,9 @@ impl Renderer {
         }
     }
 
+    /// Render the map and all entities
     pub fn render_all(self: &mut Self, win: &pancurses::Window, map: &Map, world: &World) {
+        // Render the map
         for y in 0..map.data.len() {
             for x in 0..map.data[0].len() {
                 let tile = map.data[y][x];
@@ -58,8 +60,7 @@ impl Renderer {
             }
         }
 
-
-        // Simple console rendering
+        // Render all entities
         let positions = world.read::<Position>();
         let baseEnt = world.read::<BaseEntity>();
         for entity in world.entities().join() {

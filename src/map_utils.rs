@@ -1,14 +1,17 @@
 extern crate rand;
 extern crate std;
+extern crate specs;
 
 // use rand::Rng;
 use map_utils::rand::Rng;
 // I have absolutely no idea why it thinks rand is in map_utils...
 
 use std::cmp;
+use specs::World;
 
 use map::Map;
 use entity::{Color};
+use component::{BaseEntity, Position, MoveDelta};
 
 pub struct Rect {
     x1: i32,
@@ -34,28 +37,34 @@ impl Rect {
     }
 }
 
-pub fn place_entities(room: &Rect, max_monsters_per_room: usize) {
+pub fn place_entities(room: &Rect, world: &mut World, max_monsters_per_room: usize) {
     let mut rng = rand::thread_rng();
     let num_monsters = rng.gen_range::<usize>(0, max_monsters_per_room);
 
+    // TODO I'm sure this is an anti-pattern. Use collect().uniq() or something.
+    let mut mobs = Vec::new();
     for _ in 0..num_monsters {
         // Choose a random location in this room
         let x = rng.gen_range::<i32>(room.x1, room.x2);
         let y = rng.gen_range::<i32>(room.y1, room.y2);
 
-        // if !entities.iter().any(|ent| ent.x == x && ent.y == y) {
-        //     entities.push(
-        //         Entity {
-        //             x: x,
-        //             y: y,
-        //             glyph: 'o',
-        //             fg: Color::Green,
-        //             bg: Color::Default,
-        //             blocks: true,
-        //             name: String::from("Orc"),
-        //         }
-        //     )
-        // }
+        if !mobs.contains(&(x, y)) {
+            mobs.push((x, y));
+        }
+    }
+
+    for &(x, y) in mobs.iter() {
+        world.create_entity()
+            .with(Position { x: x, y: y })
+            .with(MoveDelta { dx: 0, dy: 0 })
+            .with(BaseEntity {
+                    fg: Color::Green,
+                    bg: Color::Default,
+                    glyph: 'o',
+                    blocks: true,
+                    name: String::from("Orc"),
+                })
+            .build();
     }
 }
 
@@ -86,7 +95,7 @@ pub fn make_room(map: &mut Map, room: &Rect) {
 }
 
 /// Returns player starting position
-pub fn make_map(map: &mut Map) -> (i32, i32) {
+pub fn make_map(map: &mut Map, world: &mut World) -> (i32, i32) {
     let room_max_size = 10;
     let room_min_size = 6;
     let max_rooms = 30;
@@ -125,7 +134,7 @@ pub fn make_map(map: &mut Map) -> (i32, i32) {
                 }
             }
 
-            // place_entities(&room, entities, max_monsters_per_room);
+            place_entities(&room, world, max_monsters_per_room);
 
             rooms.push(room);
         }

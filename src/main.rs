@@ -35,7 +35,7 @@ fn main() {
     let mut map = Map::new(32, 32);
     let mut mobs = Vec::new();
 
-    let (px, py) = rlr::map_utils::make_map(&mut map);
+    let (px, py) = rlr::map_utils::make_map(&mut map, &mut world);
 
     let player = world.create_entity()
         .with(Puppeted)
