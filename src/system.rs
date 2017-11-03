@@ -1,7 +1,7 @@
 extern crate pancurses;
 
-use specs::{ReadStorage, WriteStorage, System, Join, Fetch};
-use component::{MoveDelta, Position, BaseEntity, Puppeted};
+use specs::{ReadStorage, WriteStorage, System, Join, Fetch, Entities};
+use component::{MoveDelta, Position, BaseEntity, Puppeted, Blocking};
 use event::{Event, EventQueue};
 use map::Map;
 
@@ -49,24 +49,54 @@ impl <'a> System<'a> for UpdatePos {
 pub struct EventSystem;
 
 impl <'a> System<'a> for EventSystem {
-    type SystemData = ( Fetch<'a, EventQueue>,
+    type SystemData = ( Entities<'a>,
+                        Fetch<'a, EventQueue>,
                         Fetch<'a, Map>,
                         ReadStorage<'a, Puppeted>,
-                        WriteStorage<'a, Position> );
+                        WriteStorage<'a, Position>,
+                        ReadStorage<'a, Blocking> );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (events, map, puppet, mut pos) = data;
+        let (entities, events, map, puppet, mut pos, blocking) = data;
         for event in events.0.iter() {
             info!("Detected event: {:?}", event);
             match event {
+                // If a movement has occured...
                 &Event::Movement((dx, dy)) => {
-                    for (puppet, mut pos) in (&puppet, &mut pos).join() {
-                        let &tile = map.at(pos.x + dx, pos.y + dy);
+                    let mut blocking_ents = Vec::new();
+
+                    // Iterate through every blocking entity and store its current position for later
+                    for (_, ent, posa) in (&blocking, &*entities, &pos).join() {
+                        blocking_ents.push((ent, (posa.x, posa.y)));
+                    }
+
+                    // For every moving entity...
+                    for (puppet, mut posa, ent) in (&puppet, &mut pos, &*entities).join() {
+                        // Figure out where it wants to move
+                        let (new_x, new_y) = (posa.x + dx, posa.y + dy);
+
+                        // Check that the map isn't blocking it
+                        let &tile = map.at(new_x, new_y);
                         if tile.walkable {
-                            pos.x += dx;
-                            pos.y += dy;
+
+                            // Check that an entity isn't blocking it
+                            let mut can_move=true;
+                            for blocking_ent_data in blocking_ents.iter() {
+                                let &(blocking, (blocking_x, blocking_y)) = blocking_ent_data;
+                                if (blocking_x == new_x && blocking_y == new_y) {
+                                    can_move = false;
+                                    info!("Entity collision!");
+                                    break;
+                                }
+                            }
+                            if can_move {
+                                posa.x += dx;
+                                posa.y += dy;
+                            }
                         }
                     }
+
+
                 },
                 _ => {}
             }

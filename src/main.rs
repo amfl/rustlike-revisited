@@ -10,7 +10,7 @@ use rlr::entity::{Color};
 use rlr::map::Map;
 // use rlr::game_state::GameState;
 
-use rlr::component::{Position, MoveDelta, BaseEntity, Puppeted};
+use rlr::component::{Position, MoveDelta, BaseEntity, Puppeted, Blocking};
 use specs::World;
 use specs::DispatcherBuilder;
 
@@ -29,6 +29,7 @@ fn main() {
     world.register::<MoveDelta>();
     world.register::<BaseEntity>();
     world.register::<Puppeted>();
+    world.register::<Blocking>();
 
     let mut running = true;
 
@@ -39,6 +40,7 @@ fn main() {
 
     let player = world.create_entity()
         .with(Puppeted)
+        .with(Blocking)
         .with(Position { x: px as i32, y: py as i32 })
         .with(MoveDelta { dx: 0, dy: 0 })
         .with(BaseEntity {

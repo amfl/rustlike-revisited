@@ -36,3 +36,9 @@ pub struct Puppeted;
 impl Component for Puppeted {
     type Storage = NullStorage<Self>;
 }
+
+#[derive(Default)]
+pub struct Blocking;
+impl Component for Blocking {
+    type Storage = NullStorage<Self>;
+}
