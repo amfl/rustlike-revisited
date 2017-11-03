@@ -63,36 +63,40 @@ impl <'a> System<'a> for EventSystem {
             match event {
                 // If a movement has occured...
                 &Event::Movement((dx, dy)) => {
-                    let mut ents = Vec::new();
+                    let mut blocking_ents = Vec::new();
 
-                    // Find every puppeted entity and store it in a vec
-                    for (puppet, mut posa, ent) in (&puppet, &mut pos, &*entities).join() {
-                        let &tile = map.at(posa.x + dx, posa.y + dy);
-                        if tile.walkable {
-                            ents.push((ent, (posa.x + dx, posa.y + dy)));
-                            // Iterate over all entities and see if there's one blocking your way.
-                            // type MoarData = ( ReadStorage<'a, Blocking>,
-                            //                   ReadStorage<'a, Position> );
-
-                            // for (blk, mut posb) in (&blocking, &mut pos).join() {
-                            //     // if let Some(Blocking)
-                            //     info!("Blocking Entity at: {:?}", posb);
-                            // }
-
-                            posa.x += dx;
-                            posa.y += dy;
-                        }
+                    // Iterate through every blocking entity and store its current position for later
+                    for (_, ent, posa) in (&blocking, &*entities, &pos).join() {
+                        blocking_ents.push((ent, (posa.x, posa.y)));
                     }
-                    for (entity, (new_x, new_y)) in ents {
-                        let moveto = pos.get(entity);
 
-                        // Iterate through every blocking entity
-                        for (mut posa, _, ent) in (&pos, &blocking, &*entities).join() {
-                            if posa.x == new_x && posa.y == new_y && ent != entity {
-                                info!("Collision!");
+                    // For every moving entity...
+                    for (puppet, mut posa, ent) in (&puppet, &mut pos, &*entities).join() {
+                        // Figure out where it wants to move
+                        let (new_x, new_y) = (posa.x + dx, posa.y + dy);
+
+                        // Check that the map isn't blocking it
+                        let &tile = map.at(new_x, new_y);
+                        if tile.walkable {
+
+                            // Check that an entity isn't blocking it
+                            let mut can_move=true;
+                            for blocking_ent_data in blocking_ents.iter() {
+                                let &(blocking, (blocking_x, blocking_y)) = blocking_ent_data;
+                                if (blocking_x == new_x && blocking_y == new_y) {
+                                    can_move = false;
+                                    info!("Entity collision!");
+                                    break;
+                                }
+                            }
+                            if can_move {
+                                posa.x += dx;
+                                posa.y += dy;
                             }
                         }
                     }
+
+
                 },
                 _ => {}
             }
