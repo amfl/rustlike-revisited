@@ -1,7 +1,7 @@
 extern crate pancurses;
 
-use specs::{ReadStorage, WriteStorage, System, Join, Fetch};
-use component::{MoveDelta, Position, BaseEntity, Puppeted};
+use specs::{ReadStorage, WriteStorage, System, Join, Fetch, Entities};
+use component::{MoveDelta, Position, BaseEntity, Puppeted, Blocking};
 use event::{Event, EventQueue};
 use map::Map;
 
@@ -49,22 +49,48 @@ impl <'a> System<'a> for UpdatePos {
 pub struct EventSystem;
 
 impl <'a> System<'a> for EventSystem {
-    type SystemData = ( Fetch<'a, EventQueue>,
+    type SystemData = ( Entities<'a>,
+                        Fetch<'a, EventQueue>,
                         Fetch<'a, Map>,
                         ReadStorage<'a, Puppeted>,
-                        WriteStorage<'a, Position> );
+                        WriteStorage<'a, Position>,
+                        ReadStorage<'a, Blocking> );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (events, map, puppet, mut pos) = data;
+        let (entities, events, map, puppet, mut pos, blocking) = data;
         for event in events.0.iter() {
             info!("Detected event: {:?}", event);
             match event {
+                // If a movement has occured...
                 &Event::Movement((dx, dy)) => {
-                    for (puppet, mut pos) in (&puppet, &mut pos).join() {
-                        let &tile = map.at(pos.x + dx, pos.y + dy);
+                    let mut ents = Vec::new();
+
+                    // Find every puppeted entity and store it in a vec
+                    for (puppet, mut posa, ent) in (&puppet, &mut pos, &*entities).join() {
+                        let &tile = map.at(posa.x + dx, posa.y + dy);
                         if tile.walkable {
-                            pos.x += dx;
-                            pos.y += dy;
+                            ents.push((ent, (posa.x + dx, posa.y + dy)));
+                            // Iterate over all entities and see if there's one blocking your way.
+                            // type MoarData = ( ReadStorage<'a, Blocking>,
+                            //                   ReadStorage<'a, Position> );
+
+                            // for (blk, mut posb) in (&blocking, &mut pos).join() {
+                            //     // if let Some(Blocking)
+                            //     info!("Blocking Entity at: {:?}", posb);
+                            // }
+
+                            posa.x += dx;
+                            posa.y += dy;
+                        }
+                    }
+                    for (entity, (new_x, new_y)) in ents {
+                        let moveto = pos.get(entity);
+
+                        // Iterate through every blocking entity
+                        for (mut posa, _, ent) in (&pos, &blocking, &*entities).join() {
+                            if posa.x == new_x && posa.y == new_y && ent != entity {
+                                info!("Collision!");
+                            }
                         }
                     }
                 },

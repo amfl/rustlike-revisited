@@ -11,7 +11,7 @@ use specs::World;
 
 use map::Map;
 use entity::{Color};
-use component::{BaseEntity, Position, MoveDelta};
+use component::{BaseEntity, Position, MoveDelta, Blocking};
 
 pub struct Rect {
     x1: i32,
@@ -56,6 +56,7 @@ pub fn place_entities(room: &Rect, world: &mut World, max_monsters_per_room: usi
     for &(x, y) in mobs.iter() {
         world.create_entity()
             .with(Position { x: x, y: y })
+            .with(Blocking)
             .with(MoveDelta { dx: 0, dy: 0 })
             .with(BaseEntity {
                     fg: Color::Green,
