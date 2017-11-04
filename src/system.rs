@@ -64,39 +64,56 @@ impl <'a> System<'a> for EventSystem {
                 // If a movement has occured...
                 &Event::Movement((dx, dy)) => {
                     let mut blocking_ents = Vec::new();
+                    let mut moving_ents = Vec::new();
 
-                    // Iterate through every blocking entity and store its current position for later
+                    // Iterate through every blocking entity and store it for later
                     for (_, ent, posa) in (&blocking, &*entities, &pos).join() {
-                        blocking_ents.push((ent, (posa.x, posa.y)));
+                        blocking_ents.push(ent);
+                    }
+
+                    // Iterate through every moving entity and store it for later
+                    for (_, ent, posa) in (&puppet, &*entities, &pos).join() {
+                        moving_ents.push(ent);
                     }
 
                     // For every moving entity...
-                    for (puppet, mut posa, ent) in (&puppet, &mut pos, &*entities).join() {
-                        // Figure out where it wants to move
-                        let (new_x, new_y) = (posa.x + dx, posa.y + dy);
+                    for &ent in moving_ents.iter() {
+                        let can_move = {
+                            // Figure out where the mover wants to move
+                            let posa = pos.get(ent).unwrap();
 
-                        // Check that the map isn't blocking it
-                        let &tile = map.at(new_x, new_y);
-                        if tile.walkable {
+                            info!("This mover lives at {:?}", posa);
+                            let (new_x, new_y) = (posa.x + dx, posa.y + dy);
 
-                            // Check that an entity isn't blocking it
-                            let mut can_move=true;
-                            for blocking_ent_data in blocking_ents.iter() {
-                                let &(blocking, (blocking_x, blocking_y)) = blocking_ent_data;
-                                if (blocking_x == new_x && blocking_y == new_y) {
-                                    can_move = false;
-                                    info!("Entity collision!");
-                                    break;
+                            // Check that the map isn't blocking it
+                            let &tile = map.at(new_x, new_y);
+                            if tile.walkable {
+                                // Check an entity isn't blocking it
+                                let mut blocked_by_ent = false;
+                                for &block in blocking_ents.iter() {
+                                    info!("Checking: {:?} and {:?}", ent, block);
+                                    if let Some(block_pos) = pos.get(block) {
+                                        if block_pos.x == new_x && block_pos.y == new_y {
+                                            info!("Collision!");
+                                            blocked_by_ent = true;
+                                            break;
+                                        }
+                                    }
                                 }
+                                !blocked_by_ent
                             }
-                            if can_move {
-                                posa.x += dx;
-                                posa.y += dy;
-                            }
+                            else { false }
+                        };
+
+                        if can_move {
+                            // Have to do the mutable borrow here, otherwise we would have a
+                            // mutable + immutable borrow at the same time when checking the
+                            // blocking entity's position
+                            let posa = pos.get_mut(ent).unwrap();
+                            posa.x += dx;
+                            posa.y += dy;
                         }
                     }
-
-
                 },
                 _ => {}
             }
