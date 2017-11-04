@@ -54,10 +54,11 @@ impl <'a> System<'a> for EventSystem {
                         Fetch<'a, Map>,
                         ReadStorage<'a, Puppeted>,
                         WriteStorage<'a, Position>,
-                        ReadStorage<'a, Blocking> );
+                        ReadStorage<'a, Blocking>,
+                        ReadStorage<'a, BaseEntity>);
 
     fn run(&mut self, data: Self::SystemData) {
-        let (entities, events, map, puppet, mut pos, blocking) = data;
+        let (entities, events, map, puppet, mut pos, blocking, baseent) = data;
         for event in events.0.iter() {
             info!("Detected event: {:?}", event);
             match event {
@@ -67,7 +68,7 @@ impl <'a> System<'a> for EventSystem {
                     let mut moving_ents = Vec::new();
 
                     // Iterate through every blocking entity and store it for later
-                    for (_, ent, posa) in (&blocking, &*entities, &pos).join() {
+                    for (_, ent, posa, _) in (&blocking, &*entities, &pos, &baseent).join() {
                         blocking_ents.push(ent);
                     }
 
@@ -94,7 +95,8 @@ impl <'a> System<'a> for EventSystem {
                                     info!("Checking: {:?} and {:?}", ent, block);
                                     if let Some(block_pos) = pos.get(block) {
                                         if block_pos.x == new_x && block_pos.y == new_y {
-                                            info!("Collision!");
+                                            let name = &baseent.get(block).unwrap().name;
+                                            info!("Collision! {}", name);
                                             blocked_by_ent = true;
                                             break;
                                         }
