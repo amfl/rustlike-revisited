@@ -1,4 +1,4 @@
-# rlr - Roguelike Revisited
+# rlr - Rustlike Revisited
 
 This shouldn't go anywhere. I've forgotten everything about rust, so I'm tinkering again.
 
