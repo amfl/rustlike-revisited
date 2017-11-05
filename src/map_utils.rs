@@ -11,7 +11,7 @@ use specs::World;
 
 use map::Map;
 use entity::{Color};
-use component::{BaseEntity, Position, MoveDelta, Blocking};
+use component::{BaseEntity, Position, MoveDelta, Blocking, Fighter};
 
 pub struct Rect {
     x1: i32,
@@ -64,6 +64,12 @@ pub fn place_entities(room: &Rect, world: &mut World, max_monsters_per_room: usi
                     glyph: 'o',
                     blocks: true,
                     name: String::from("Orc"),
+                })
+            .with(Fighter {
+                    max_hp: 10,
+                    hp: 10,
+                    power: 4,
+                    def: 1,
                 })
             .build();
     }

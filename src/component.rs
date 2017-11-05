@@ -31,6 +31,17 @@ impl Component for BaseEntity {
     type Storage = VecStorage<Self>;
 }
 
+#[derive(Debug)]
+pub struct Fighter {
+    pub max_hp: i32,
+    pub hp: i32,
+    pub def: i32,
+    pub power: i32
+}
+impl Component for Fighter {
+    type Storage = VecStorage<Self>;
+}
+
 #[derive(Default)]
 pub struct Puppeted;
 impl Component for Puppeted {

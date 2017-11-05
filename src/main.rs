@@ -10,7 +10,7 @@ use rlr::entity::{Color};
 use rlr::map::Map;
 // use rlr::game_state::GameState;
 
-use rlr::component::{Position, MoveDelta, BaseEntity, Puppeted, Blocking};
+use rlr::component::{Position, MoveDelta, BaseEntity, Puppeted, Blocking, Fighter};
 use specs::World;
 use specs::DispatcherBuilder;
 
@@ -30,6 +30,7 @@ fn main() {
     world.register::<BaseEntity>();
     world.register::<Puppeted>();
     world.register::<Blocking>();
+    world.register::<Fighter>();
 
     let mut running = true;
 
@@ -49,6 +50,12 @@ fn main() {
                 glyph: '@',
                 blocks: true,
                 name: String::from("Player"),
+            })
+        .with(Fighter {
+                max_hp: 30,
+                hp: 30,
+                power: 3,
+                def: 3,
             })
         .build();
 
