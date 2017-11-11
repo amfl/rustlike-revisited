@@ -1,4 +1,5 @@
 extern crate pancurses;
+extern crate specs;
 
 pub enum Direction {
     Up,
@@ -13,4 +14,6 @@ pub enum Event {
     Quit,
 }
 
-pub struct EventQueue(pub Vec<Event>);
+pub struct InputQueue(pub Vec<pancurses::Input>);
+pub struct MovementIntent(pub Vec<(specs::Entity, (i32, i32))>);
+// pub struct EventQueue(pub Vec<Event>);

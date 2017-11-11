@@ -1,9 +1,10 @@
 extern crate pancurses;
 
-use specs::{ReadStorage, WriteStorage, System, Join, Fetch, Entities};
+use specs::{ReadStorage, WriteStorage, System, Join, Fetch, FetchMut, Entities};
 use component::{MoveDelta, Position, BaseEntity, Puppeted, Blocking};
-use event::{Event, EventQueue};
+use event::{Event, InputQueue, MovementIntent};
 use map::Map;
+use input_handlers;
 
 pub struct UpdatePos;
 
@@ -46,79 +47,113 @@ impl <'a> System<'a> for UpdatePos {
 //     }
 // }
 
-pub struct EventSystem;
-
-impl <'a> System<'a> for EventSystem {
+/// Deals with transforming keyboard events into actual game events.
+pub struct InputSystem;
+impl <'a> System<'a> for InputSystem {
     type SystemData = ( Entities<'a>,
-                        Fetch<'a, EventQueue>,
-                        Fetch<'a, Map>,
                         ReadStorage<'a, Puppeted>,
-                        WriteStorage<'a, Position>,
-                        ReadStorage<'a, Blocking>,
-                        ReadStorage<'a, BaseEntity>);
-
-    fn run(&mut self, data: Self::SystemData) {
-        let (entities, events, map, puppet, mut pos, blocking, baseent) = data;
-        for event in events.0.iter() {
-            info!("Detected event: {:?}", event);
-            match event {
-                // If a movement has occured...
-                &Event::Movement((dx, dy)) => {
-                    let mut blocking_ents = Vec::new();
-                    let mut moving_ents = Vec::new();
-
-                    // Iterate through every blocking entity and store it for later
-                    for (_, ent, posa, _) in (&blocking, &*entities, &pos, &baseent).join() {
-                        blocking_ents.push(ent);
+                        ReadStorage<'a, Position>,
+                        Fetch<'a, InputQueue>,
+                        FetchMut<'a, MovementIntent>,
+                        );
+    fn run(&self, data: Self::SystemData) {
+        let (entities, puppeted, position, &input, &movement_intent) = data;
+        for keypress in input.0 {
+            match input_handlers::handle_keys(keypress) {
+                Some(Event::Movement((dx, dy))) => {
+                    for (ent, _, _) in (&*entities, puppeted, position).join() {
+                        movement_intent.0.push((ent, Event::Movement((dx, dy))));
                     }
-
-                    // Iterate through every moving entity and store it for later
-                    for (_, ent, posa) in (&puppet, &*entities, &pos).join() {
-                        moving_ents.push(ent);
-                    }
-
-                    // For every moving entity...
-                    for &ent in moving_ents.iter() {
-                        let can_move = {
-                            // Figure out where the mover wants to move
-                            let posa = pos.get(ent).unwrap();
-
-                            info!("This mover lives at {:?}", posa);
-                            let (new_x, new_y) = (posa.x + dx, posa.y + dy);
-
-                            // Check that the map isn't blocking it
-                            let &tile = map.at(new_x, new_y);
-                            if tile.walkable {
-                                // Check an entity isn't blocking it
-                                let mut blocked_by_ent = false;
-                                for &block in blocking_ents.iter() {
-                                    info!("Checking: {:?} and {:?}", ent, block);
-                                    if let Some(block_pos) = pos.get(block) {
-                                        if block_pos.x == new_x && block_pos.y == new_y {
-                                            let name = &baseent.get(block).unwrap().name;
-                                            info!("Collision! {}", name);
-                                            blocked_by_ent = true;
-                                            break;
-                                        }
-                                    }
-                                }
-                                !blocked_by_ent
-                            }
-                            else { false }
-                        };
-
-                        if can_move {
-                            // Have to do the mutable borrow here, otherwise we would have a
-                            // mutable + immutable borrow at the same time when checking the
-                            // blocking entity's position
-                            let posa = pos.get_mut(ent).unwrap();
-                            posa.x += dx;
-                            posa.y += dy;
-                        }
-                    }
-                },
-                _ => {}
+                }
             }
         }
     }
 }
+
+// pub fn in_location(ent: Entity<'a>, pos: POSITION, (x: i32, y: i32)) -> bool {
+//     // TODO Implement
+// }
+
+pub struct MovementSystem;
+impl <'a> System<'a> for MovementSystem {
+    type SystemData = ( Entities<'a>,
+                        Fetch<'a, MovementIntent>,
+                        WriteStorage<'a, Position>,
+                        ReadStorage<'a, Blocking>,
+                        ReadStorage<'a, BaseEntity>,
+                        );
+
+    fn run(&self, (entities, movement_intent, sPosition, sBlocking, sBaseEnt): Self::SystemData) {
+        for movement in movement_intent.0.iter() {
+            let mut blocking_ents = Vec::new();
+
+            // Iterate through every blocking entity and store it for later
+            for (ent, _, _, _) in (&*entities, &sBlocking, &sPosition, &sBaseEnt).join() {
+                blocking_ents.push(ent);
+            }
+
+            // For every moving entity...
+            for &(ent, (dx, dy)) in movement_intent.iter() {
+                let can_move = {
+                    // Figure out where the mover wants to move
+                    let posa = pos.get(ent).unwrap();
+
+                    info!("This mover lives at {:?}", posa);
+                    let (new_x, new_y) = (posa.x + dx, posa.y + dy);
+
+                    // Check that the map isn't blocking it
+                    let &tile = map.at(new_x, new_y);
+                    if tile.walkable {
+                        // Check an entity isn't blocking it
+                        let mut blocked_by_ent = false;
+                        for &block in blocking_ents.iter() {
+                            info!("Checking: {:?} and {:?}", ent, block);
+                            if let Some(block_pos) = pos.get(block) {
+                                if block_pos.x == new_x && block_pos.y == new_y {
+                                    let name = &baseent.get(block).unwrap().name;
+                                    info!("Collision! {}", name);
+                                    blocked_by_ent = true;
+                                    break;
+                                }
+                            }
+                        }
+                        !blocked_by_ent
+                    }
+                    else { false }
+                };
+
+                if can_move {
+                    // Have to do the mutable borrow here, otherwise we would have a
+                    // mutable + immutable borrow at the same time when checking the
+                    // blocking entity's position
+                    let posa = pos.get_mut(ent).unwrap();
+                    posa.x += dx;
+                    posa.y += dy;
+                }
+            }
+        }
+    }
+}
+
+// pub struct EventSystem;
+
+// impl <'a> System<'a> for EventSystem {
+//     type SystemData = ( Entities<'a>,
+//                         Fetch<'a, EventQueue>,
+//                         Fetch<'a, Map>,
+//                         ReadStorage<'a, Puppeted>,
+//                         WriteStorage<'a, Position>,
+//                         ReadStorage<'a, Blocking>,
+//                         ReadStorage<'a, BaseEntity>);
+
+//     fn run(&mut self, data: Self::SystemData) {
+//         let (entities, events, map, puppet, mut pos, blocking, baseent) = data;
+//         for event in events.0.iter() {
+//             info!("Detected event: {:?}", event);
+//             match event {
+//                 },
+//                 _ => {}
+//             }
+//         }
+//     }
+// }
