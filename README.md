@@ -13,3 +13,15 @@ The plan as of now is to run through [the roguelike tutorial revised](http://rog
 To simulate a slow connection, you can use `pv`
 
     cargo run | pv -L 512 -q
+
+### Docker
+
+To build and run in a docker image:
+
+    ./docker-run.sh
+
+To quickly start hacking on the code in a docker image:
+
+    ./docker-dev.sh
+
+From there you can use `cargo build` and `cargo run`.

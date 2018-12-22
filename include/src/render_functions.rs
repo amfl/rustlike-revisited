@@ -67,7 +67,7 @@ impl Renderer {
         for entity in world.entities().join() {
             if let Some(base) = baseEnt.get(entity) {
                 if let Some(pos) = positions.get(entity) {
-                    win.attrset(pancurses::COLOR_PAIR(self.get_pair(base.fg.clone(), base.bg.clone())));
+                    win.attrset(pancurses::COLOR_PAIR(self.get_pair(base.fg.clone(), base.bg.clone()).into()));
                     win.mvprintw(pos.y, pos.x, &base.glyph.to_string());
                 }
             }
