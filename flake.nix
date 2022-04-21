@@ -10,16 +10,22 @@
       let
         pkgs = import nixpkgs { inherit system; };
         naersk-lib = pkgs.callPackage naersk { };
+        buildInputs = with pkgs; [ ncurses ];
       in
       {
-        defaultPackage = naersk-lib.buildPackage ./.;
+        defaultPackage = naersk-lib.buildPackage {
+          buildInputs = buildInputs;
+          pname = "rlr";
+          root = ./include/.;
+        };
 
         defaultApp = utils.lib.mkApp {
           drv = self.defaultPackage."${system}";
         };
 
         devShell = with pkgs; mkShell {
-          buildInputs = [ cargo rustc rustfmt pre-commit rustPackages.clippy ];
+          buildInputs = [ cargo rustc rustfmt pre-commit rustPackages.clippy ] ++
+            buildInputs;
           RUST_SRC_PATH = rustPlatform.rustLibSrc;
         };
       });
